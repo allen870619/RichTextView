@@ -12,6 +12,13 @@ public class RichTextView: UITextView {
     public let obliquenessVal = 0.3
     public let indentVal = CGFloat(32)
 
+    public func initTypingStatus() {
+        typingAttributes[.font] = UIFont.preferredFont(forTextStyle: .body)
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .left
+        typingAttributes[.paragraphStyle] = paragraphStyle
+    }
+
     /* Fonts*/
     /// set font style
     public func setFont(fontStyle: UIFont.TextStyle) {
@@ -146,30 +153,37 @@ public class RichTextView: UITextView {
 
     /// calculate indent
     private func indentMove(_ value: CGFloat) {
+        let targetRange = paragraphRange
+
         // get current position
-        var firstLine: CGFloat = 0
-        var headLine: CGFloat = 0
-        var alignment: NSTextAlignment = .natural
-        if paragraphRange.length == 0 {
+        var firstLine = CGFloat(0)
+        var headLine = CGFloat(0)
+        var tailLine = CGFloat(0) // This will less or equal 0
+        var alignment = NSTextAlignment.natural
+        if targetRange.length == 0 {
             let style = typingAttributes[.paragraphStyle] as? NSParagraphStyle
             firstLine = style?.firstLineHeadIndent ?? 0
             headLine = style?.headIndent ?? 0
+            tailLine = style?.tailIndent ?? 0
             alignment = style?.alignment ?? .natural
         } else {
-            if let styles = getAttribute(paragraphRange, type: .paragraphStyle) as? [ParagraphRange] {
+            if let styles = getAttribute(targetRange, type: .paragraphStyle) as? [ParagraphRange] {
                 for style in styles {
                     firstLine = max(firstLine, style.paragraph.firstLineHeadIndent)
                     headLine = max(headLine, style.paragraph.headIndent)
+                    tailLine = min(tailLine, style.paragraph.tailIndent)
                 }
                 alignment = styles.last?.paragraph.alignment ?? .natural
             }
         }
 
-        // create New Style
+        // create new Style and set indent
         let newStyle = NSMutableParagraphStyle()
-        newStyle.firstLineHeadIndent = firstLine + value
-        newStyle.headIndent = headLine + value
         newStyle.alignment = alignment
+        let isNegIndent = tailLine < 0 || (headLine == 0 && value < 0)
+        newStyle.headIndent = isNegIndent ? 0 : headLine + value
+        newStyle.tailIndent = isNegIndent ? tailLine + value : 0
+        newStyle.firstLineHeadIndent = isNegIndent ? newStyle.tailIndent : newStyle.headIndent
 
         // set back
         if paragraphRange.length == 0 {
@@ -178,7 +192,7 @@ public class RichTextView: UITextView {
             setAttrWithKeepingPos { [weak self] in
                 self?.setAttribute(.paragraphStyle,
                                    value: newStyle,
-                                   range: self!.paragraphRange)
+                                   range: targetRange)
             }
         }
     }
@@ -207,7 +221,7 @@ public class RichTextView: UITextView {
 
             headLine += isEnable ? -indicator.size().width : indicator.size().width
         } else {
-            let styleList = getAttribute(paragraphRange, type: .paragraphStyle) as? [(NSMutableParagraphStyle, NSRange)]
+            let styleList = getAttribute(paragraphRange, type: .paragraphStyle) as? [ParagraphRange]
 
             var isEnable = false
             if let style = styleList?.first {
@@ -254,13 +268,12 @@ extension RichTextView {
     typealias IntRange = (val: Int?, range: NSRange)
     typealias ParagraphRange = (paragraph: NSMutableParagraphStyle, range: NSRange)
 
-    // NSRange
-    /// This is for getting paragraph of selectedRange
+    /// paragraph of selectedRange
     var paragraphRange: NSRange {
         (text as NSString).paragraphRange(for: selectedRange)
     }
 
-    // attribute controller
+    /* Attributes*/
     /// get attribure list
     func getAttribute(_ range: NSRange, type: NSAttributedString.Key) -> [(Any, NSRange)] {
         var list = [(Any, NSRange)]()
@@ -285,15 +298,17 @@ extension RichTextView {
     }
 
     /// Insert text
+    ///
+    /// For attachment text to use
     func insertAttrText(_ attrText: NSAttributedString) {
-        let loc = selectedRange.location
+        let location = selectedRange.location
         let originText = attributedText.mutableCopy() as? NSMutableAttributedString
-        originText?.insert(attrText, at: loc)
+        originText?.insert(attrText, at: location)
         attributedText = originText
         selectedRange.location += attrText.length
     }
 
-    // utils
+    /* others*/
     /// Keep scrollview after set selected
     func setAttrWithKeepingPos(_ todo: (() -> Void)?) {
         let tmpSelect = selectedRange

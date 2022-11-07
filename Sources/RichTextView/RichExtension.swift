@@ -1,50 +1,21 @@
 //
 //  RichExtension.swift
-//  
+//
 //
 //  Created by Lee Yen Lin on 2022/11/4.
 //
 
 import UIKit
 
-extension UIFont {
-    /// Bold
-    func setBold(_ enable: Bool) -> UIFont {
-        if enable {
-            return withTraits(traits: .traitBold)
-        } else {
-            return withoutTraits(traits: .traitBold)
-        }
-    }
-
-    var isBold: Bool {
-        fontDescriptor.symbolicTraits.contains(.traitBold)
-    }
-
-    /// combine symbolic traits on it
-    private func withTraits(traits: UIFontDescriptor.SymbolicTraits) -> UIFont {
-        let descriptor = fontDescriptor.withSymbolicTraits(traits)
-        return UIFont(descriptor: descriptor!, size: 0) // size 0 means keep the size as it is
-    }
-
-    /// remove symbolic from original font
-    private func withoutTraits(traits: UIFontDescriptor.SymbolicTraits) -> UIFont {
-        var traitList = fontDescriptor.symbolicTraits
-        traitList.remove(traits)
-        let descriptor = fontDescriptor.withSymbolicTraits(traitList)
-        return UIFont(descriptor: descriptor!, size: 0) // size 0 means keep the size as it is
-    }
-}
-
 /// Edit
 ///
 /// Override copy paste method for image files
-extension RichTextView {
-    typealias AttachmentRange = (attachment: NSTextAttachment, range: NSRange)
+public extension RichTextView {
+    internal typealias AttachmentRange = (attachment: NSTextAttachment, range: NSRange)
 
     // Edit
     /** copy and paste */
-    public override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+    override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         if action == #selector(paste(_:)) {
             return UIPasteboard.general.hasImages || super.canPerformAction(action, withSender: sender)
         } else {
@@ -52,10 +23,11 @@ extension RichTextView {
         }
     }
 
-    public override func cut(_ sender: Any?) {
-        if let attrList = getAttribute(selectedRange, type: .attachment) as? [AttachmentRange], !attrList.isEmpty {
+    override func cut(_ sender: Any?) {
+        let attrList = getAttribute(selectedRange, type: .attachment) as? [AttachmentRange]
+        if let attrList, !attrList.isEmpty {
             // original String
-            let ori = attributedText.mutableCopy() as? NSMutableAttributedString
+            let oriAttrString = attributedText.mutableCopy() as? NSMutableAttributedString
 
             // get image files from attachment
             let startLoc = attrList.first?.range.location
@@ -71,7 +43,7 @@ extension RichTextView {
             // delete attachment string
             deleteList.reverse()
             for item in deleteList {
-                ori?.deleteCharacters(in: item)
+                oriAttrString?.deleteCharacters(in: item)
             }
 
             // copy image to clipboard
@@ -82,7 +54,7 @@ extension RichTextView {
             }
 
             // set back to textView
-            attributedText = ori
+            attributedText = oriAttrString
             if let startLoc {
                 selectedRange = .init(location: startLoc, length: 0)
             }
@@ -91,7 +63,7 @@ extension RichTextView {
         }
     }
 
-    public override func copy(_ sender: Any?) {
+    override func copy(_ sender: Any?) {
         if let attrList = getAttribute(selectedRange, type: .attachment) as? [AttachmentRange] {
             // get images
             var imgList = [UIImage]()
@@ -112,7 +84,7 @@ extension RichTextView {
         }
     }
 
-    public override func paste(_ sender: Any?) {
+    override func paste(_ sender: Any?) {
         if UIPasteboard.general.hasImages {
             if let imageList = UIPasteboard.general.images {
                 for image in imageList {
@@ -127,7 +99,7 @@ extension RichTextView {
     }
 
     /// Insert Image to TextView
-    func insertImage(_ image: UIImage?) {
+    internal func insertImage(_ image: UIImage?) {
         guard let image else {
             return
         }

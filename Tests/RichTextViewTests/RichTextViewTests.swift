@@ -1,5 +1,5 @@
-import XCTest
 @testable import RichTextView
+import XCTest
 
 final class RichTextViewTests: XCTestCase {
     func testExample() throws {
