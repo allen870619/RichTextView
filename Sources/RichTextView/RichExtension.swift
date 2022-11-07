@@ -98,8 +98,17 @@ public extension RichTextView {
         }
     }
 
+    /// Insert text
+    func insertAttrText(_ attrText: NSAttributedString) {
+        let location = selectedRange.location
+        let originText = attributedText.mutableCopy() as? NSMutableAttributedString
+        originText?.insert(attrText, at: location)
+        attributedText = originText
+        selectedRange.location += attrText.length
+    }
+
     /// Insert Image to TextView
-    internal func insertImage(_ image: UIImage?) {
+    func insertImage(_ image: UIImage?) {
         guard let image else {
             return
         }

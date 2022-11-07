@@ -297,17 +297,6 @@ extension RichTextView {
         attributedText = origin
     }
 
-    /// Insert text
-    ///
-    /// For attachment text to use
-    func insertAttrText(_ attrText: NSAttributedString) {
-        let location = selectedRange.location
-        let originText = attributedText.mutableCopy() as? NSMutableAttributedString
-        originText?.insert(attrText, at: location)
-        attributedText = originText
-        selectedRange.location += attrText.length
-    }
-
     /* others*/
     /// Keep scrollview after set selected
     func setAttrWithKeepingPos(_ todo: (() -> Void)?) {
