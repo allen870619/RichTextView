@@ -19,6 +19,9 @@ protocol RichTextViewGetter {
 /// Getter
 ///
 /// Instance method for getting attribute status.
+///
+/// Use these varaible to as reference UI status.
+///
 /// Return `false` or `nil` if there're multiple status exist.
 extension RichTextView: RichTextViewGetter {
     /// Get font style
