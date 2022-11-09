@@ -4,13 +4,14 @@
 //
 //  Created by Lee Yen Lin on 2022/11/4.
 //
-
+// swiftlint:disable opening_brace
 import UIKit
 
 public class RichTextView: UITextView {
     /// config
     public let obliquenessVal = 0.3
     public let indentVal = CGFloat(32)
+    var isDelete = false
 
     public func initTypingStatus() {
         typingAttributes[.font] = UIFont.preferredFont(forTextStyle: .body)
@@ -200,65 +201,120 @@ public class RichTextView: UITextView {
     // List
     // bullet List
     /** set bullet list */
-    func setBulletList() {
-        // get current position
-        var firstLine: CGFloat = 0
-        var headLine: CGFloat = 0
-        let indicator = NSMutableAttributedString(string: "\u{2022}")
+    /// 針對換行
+    public func fixListPrefix() {
+        let range = (text as NSString).paragraphRange(for: selectedRange)
+        if isDelete {
+            isDelete = false
+            return
+        }
+        if range.length == 0 {
+            let paragraphStyle = typingAttributes[.paragraphStyle] as? NSParagraphStyle
+            if paragraphStyle?.firstLineHeadIndent != paragraphStyle?.headIndent {
+                setBulletList(range)
+            }
+        }
+    }
 
-        if paragraphRange.length == 0 {
+    public func setBulletList(_ range: NSRange? = nil, forceSetMode: Bool? = nil) {
+        let targetRange = range == nil ? paragraphRange : range!
+
+        // get current position and data
+        let indicator = NSMutableAttributedString(string: "•")
+        let originAttrStr = attributedText.mutableCopy() as? NSMutableAttributedString
+
+        if targetRange.length == 0 {
+            // get current paragraph style
             let style = typingAttributes[.paragraphStyle] as? NSParagraphStyle
-            firstLine = style?.firstLineHeadIndent ?? 0
-            headLine = style?.headIndent ?? 0
+            let firstIndent = style?.firstLineHeadIndent ?? 0
 
-            let isEnable = abs(firstLine - headLine) > 0
-            indicator.addAttributes(typingAttributes, range: NSRange(location: 0, length: 1))
+            // set enable
+            // for calculate size
+            indicator.addAttributes(typingAttributes,
+                                    range: .init(location: 0, length: indicator.length))
+            let newParagraph = NSMutableParagraphStyle()
+            newParagraph.alignment = style?.alignment ?? .left
+            newParagraph.firstLineHeadIndent = firstIndent
+            newParagraph.headIndent = firstIndent + indicator.size().width
+            typingAttributes[.paragraphStyle] = newParagraph
 
-            let originAttr = attributedText.mutableCopy() as? NSMutableAttributedString
-            originAttr?.insert(indicator, at: selectedRange.location)
-            attributedText = originAttr
-            typingAttributes[.listMode] = isEnable ? ListMode.bullet : nil
+            // dot
+            indicator.addAttributes(typingAttributes,
+                                    range: .init(location: 0, length: indicator.length))
 
-            headLine += isEnable ? -indicator.size().width : indicator.size().width
+            // insert to original text
+            originAttrStr?.insert(indicator, at: selectedRange.location)
+            attributedText = originAttrStr
         } else {
-            let styleList = getAttribute(paragraphRange, type: .paragraphStyle) as? [ParagraphRange]
+            // separate paragraph
+            let targetRange = selectedRange.length == 0 ? paragraphRange : selectedRange
+            let targetStr = originAttrStr?.attributedSubstring(from: targetRange).string ?? ""
 
-            var isEnable = false
-            if let style = styleList?.first {
-                firstLine = style.0.firstLineHeadIndent
-                headLine = style.0.headIndent
-
-                isEnable = abs(firstLine - headLine) > 0
+            // create paragraph range list
+            var rangeList = [NSRange]()
+            let strLenList = (targetStr.split(separator: "\n")).map(\.count)
+            var start = targetRange.location
+            for len in strLenList {
+                let range = (text as NSString).paragraphRange(for: .init(location: start, length: len))
+                rangeList.append(range)
+                start += len + 1
             }
 
-            attributedText.enumerateAttributes(in: paragraphRange) { dict, _, _ in
-                indicator.addAttributes(dict, range: NSRange(location: 0, length: 1))
-            }
-
-            headLine += isEnable ? -indicator.size().width : indicator.size().width
-
-            let originAttr = attributedText.mutableCopy() as? NSMutableAttributedString
-            if isEnable {
-                originAttr?.deleteCharacters(in: NSRange(location: paragraphRange.location, length: 1))
-            } else {
-                originAttr?.insert(indicator, at: paragraphRange.location)
-            }
-            attributedText = originAttr
-        }
-
-        // shift
-        let newStyle = NSMutableParagraphStyle()
-        newStyle.firstLineHeadIndent = firstLine
-        newStyle.headIndent = headLine
-
-        // set back
-        if paragraphRange.length == 0 {
-            typingAttributes[.paragraphStyle] = newStyle
-        } else {
-            setAttrWithKeepingPos { [self] in
-                setAttribute(.paragraphStyle, value: newStyle, range: paragraphRange)
+            var shift = 0 // for delete/insert icon
+            for range in rangeList {
+                let shiftRange = NSRange(location: range.location + shift, length: range.length)
+                if let result = setSingleParagraph(range: shiftRange,
+                                                   indicator: indicator,
+                                                   enable: forceSetMode)
+                {
+                    shift += indicator.length * (result ? 1 : -1)
+                }
             }
         }
+    }
+
+    private func setSingleParagraph(range: NSRange,
+                                    indicator: NSMutableAttributedString,
+                                    enable: Bool? = nil) -> Bool?
+    {
+        guard let originAttrStr = attributedText.mutableCopy() as? NSMutableAttributedString else {
+            return nil
+        }
+        var attrList = typingAttributes
+        if range.length != 0 {
+            attrList = attributedText.attributes(at: range.location, effectiveRange: nil)
+        }
+        indicator.addAttributes(attrList, range: NSRange(location: 0, length: indicator.length))
+        let paragrapghStyle = (getAttribute(range, type: .paragraphStyle) as? [ParagraphRange])?.last
+        let newParagraphStyle = NSMutableParagraphStyle()
+        let firstIndent = paragrapghStyle?.paragraph.firstLineHeadIndent ?? 0
+        let headIndent = paragrapghStyle?.paragraph.headIndent ?? 0
+        newParagraphStyle.alignment = paragrapghStyle?.paragraph.alignment ?? .left
+
+        let enable = enable == nil ? firstIndent == headIndent : enable!
+
+        if enable { // add icon
+            originAttrStr.insert(indicator, at: range.location)
+            newParagraphStyle.firstLineHeadIndent = firstIndent
+            newParagraphStyle.headIndent = firstIndent + indicator.size().width
+            originAttrStr.addAttribute(.paragraphStyle,
+                                       value: newParagraphStyle,
+                                       range: .init(location: range.location,
+                                                    length: range.length + indicator.length))
+        } else {
+            newParagraphStyle.firstLineHeadIndent = firstIndent
+            newParagraphStyle.headIndent = firstIndent
+            originAttrStr.addAttribute(.paragraphStyle,
+                                       value: newParagraphStyle,
+                                       range: range)
+            originAttrStr.deleteCharacters(in: .init(location: range.location,
+                                                     length: indicator.length))
+
+            isDelete = true
+        }
+        attributedText = originAttrStr
+        typingAttributes[.paragraphStyle] = newParagraphStyle
+        return enable
     }
 }
 
@@ -269,7 +325,7 @@ extension RichTextView {
     typealias ParagraphRange = (paragraph: NSMutableParagraphStyle, range: NSRange)
 
     /// paragraph of selectedRange
-    var paragraphRange: NSRange {
+    public var paragraphRange: NSRange {
         (text as NSString).paragraphRange(for: selectedRange)
     }
 
@@ -307,16 +363,4 @@ extension RichTextView {
         selectedRange = tmpSelect
         scrollRangeToVisible(tmpSelect)
     }
-}
-
-/// NOT CHECK YET
-extension NSAttributedString.Key {
-    static let listMode: NSAttributedString.Key = .init("listMode")
-    static let listOrder: NSAttributedString.Key = .init("listOrder")
-}
-
-enum ListMode {
-    case check
-    case bullet
-    case number
 }

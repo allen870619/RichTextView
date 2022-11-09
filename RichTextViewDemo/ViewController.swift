@@ -12,9 +12,9 @@ class ViewController: UIViewController {
     @IBOutlet var textView: RichTextView!
     @IBOutlet var segFont: UISegmentedControl!
     @IBOutlet var segAlign: UISegmentedControl!
+    @IBOutlet var segList: UISegmentedControl!
     @IBOutlet var btnStyleList: [UIButton]!
     @IBOutlet var paragraphList: [UIButton]!
-
     /**
      view lifecycle
      */
@@ -75,6 +75,11 @@ class ViewController: UIViewController {
             let align: [NSTextAlignment] = [.left, .center, .right]
             textView.setAlignment(align[index])
         }, for: .valueChanged)
+
+        // list
+        segList.addAction(.init { [self] _ in
+            textView.setBulletList()
+        }, for: .valueChanged)
     }
 
     private func setBtnStyle(_ btn: UIButton, _ avbl: Bool) {
@@ -117,5 +122,22 @@ extension ViewController: UITextViewDelegate {
         } else {
             segAlign.selectedSegmentIndex = -1
         }
+
+        // list
+        textView.fixListPrefix()
+    }
+
+    func textView(_: UITextView, shouldChangeTextIn _: NSRange, replacementText text: String) -> Bool {
+        if textView.selectedRange.length == 0 {
+            if let char = text.cString(using: String.Encoding.utf8) {
+                let isBackSpace = strcmp(char, "\\b")
+                if isBackSpace == -92, textView.paragraphRange.length == 1 {
+                    textView.setBulletList(forceSetMode: false)
+                    return false
+                }
+            }
+        } else {}
+
+        return true
     }
 }

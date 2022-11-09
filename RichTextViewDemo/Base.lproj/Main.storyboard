@@ -26,7 +26,7 @@
                                 <textInputTraits key="textInputTraits" autocorrectionType="no"/>
                             </textView>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="4" translatesAutoresizingMaskIntoConstraints="NO" id="GwQ-rh-d0T" userLabel="ctrlStack">
-                                <rect key="frame" x="16" y="676.33333333333337" width="361" height="141.66666666666663"/>
+                                <rect key="frame" x="16" y="641.33333333333337" width="361" height="176.66666666666663"/>
                                 <subviews>
                                     <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" translatesAutoresizingMaskIntoConstraints="NO" id="6Wt-pV-OaX">
                                         <rect key="frame" x="0.0" y="0.0" width="361" height="32"/>
@@ -44,8 +44,16 @@
                                             <segment title="" image="text.alignright" catalog="system"/>
                                         </segments>
                                     </segmentedControl>
+                                    <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="mwy-GL-qai">
+                                        <rect key="frame" x="0.0" y="70" width="361" height="32"/>
+                                        <segments>
+                                            <segment title="bullet"/>
+                                            <segment title="num"/>
+                                            <segment title="?"/>
+                                        </segments>
+                                    </segmentedControl>
                                     <stackView opaque="NO" contentMode="scaleToFill" distribution="fillProportionally" translatesAutoresizingMaskIntoConstraints="NO" id="m9I-up-wE0">
-                                        <rect key="frame" x="0.0" y="70" width="361" height="33.333333333333343"/>
+                                        <rect key="frame" x="0.0" y="105" width="361" height="33.333333333333343"/>
                                         <subviews>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6fZ-Z4-Prz">
                                                 <rect key="frame" x="0.0" y="0.0" width="93" height="33.333333333333336"/>
@@ -78,7 +86,7 @@
                                         </subviews>
                                     </stackView>
                                     <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="OQs-QF-F9W">
-                                        <rect key="frame" x="0.0" y="107.33333333333326" width="361" height="34.333333333333343"/>
+                                        <rect key="frame" x="0.0" y="142.33333333333326" width="361" height="34.333333333333343"/>
                                         <subviews>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="BHT-Xu-c2L">
                                                 <rect key="frame" x="0.0" y="0.0" width="90.333333333333329" height="34.333333333333336"/>
@@ -119,6 +127,7 @@
                     <connections>
                         <outlet property="segAlign" destination="Hei-ah-Las" id="fpg-zu-wat"/>
                         <outlet property="segFont" destination="6Wt-pV-OaX" id="KGC-Ml-mo6"/>
+                        <outlet property="segList" destination="mwy-GL-qai" id="b8o-dZ-dYa"/>
                         <outlet property="textView" destination="d7q-8P-dIb" id="8ye-Pr-ue5"/>
                         <outletCollection property="btnStyleList" destination="6fZ-Z4-Prz" collectionClass="NSMutableArray" id="bhb-RX-xEs"/>
                         <outletCollection property="btnStyleList" destination="AKC-5r-tez" collectionClass="NSMutableArray" id="tSW-kU-OJG"/>
