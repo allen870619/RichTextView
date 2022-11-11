@@ -131,7 +131,8 @@ extension ViewController: UITextViewDelegate {
         if textView.selectedRange.length == 0 {
             if let char = text.cString(using: String.Encoding.utf8) {
                 let isBackSpace = strcmp(char, "\\b")
-                if isBackSpace == -92, textView.paragraphRange.length == 1 {
+                let isEnter = strcmp(char, "\n")
+                if isBackSpace == -92 || isEnter == 0, textView.paragraphRange.length == 1 {
                     textView.setBulletList(forceSetMode: false)
                     return false
                 }
