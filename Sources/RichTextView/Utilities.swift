@@ -23,11 +23,20 @@ extension UIFont {
 
     /// get font's textStyle
     func getTextStyle() -> UIFont.TextStyle? {
-        let style = fontDescriptor.object(forKey: .textStyle) as? UIFont.TextStyle
-        guard let style else {
-            return nil
+        // 16以下會讀不到字體 導致大小重設, 故直接參照原始大小做比較
+        if #available(iOS 16.0, *) {
+            guard let style = fontDescriptor.object(forKey: .textStyle) as? UIFont.TextStyle else {
+                return nil
+            }
+            return getTextStyleByName(style.rawValue)
+
+        } else {
+            return getTextStyleBySize(fontDescriptor.pointSize)
         }
-        switch style.rawValue {
+    }
+
+    private func getTextStyleByName(_ rawName: String) -> UIFont.TextStyle? {
+        switch rawName {
         case let name where name.contains("Title0"):
             return .largeTitle
         case let name where name.contains("Title1"):
@@ -43,10 +52,28 @@ extension UIFont {
         }
     }
 
+    private func getTextStyleBySize(_ rawValue: CGFloat) -> UIFont.TextStyle? {
+        switch rawValue {
+        case 34:
+            return .largeTitle
+        case 28:
+            return .title1
+        case 22:
+            return .title2
+        case 20:
+            return .title3
+        case 17:
+            return .body
+        default:
+            return nil
+        }
+    }
+
     /// combine symbolic traits on it
     private func withTraits(traits: UIFontDescriptor.SymbolicTraits) -> UIFont {
         let descriptor = fontDescriptor.withSymbolicTraits(traits)
-        return UIFont(descriptor: descriptor!, size: 0) // size 0 means keep the size as it is
+        let size = fontDescriptor.pointSize
+        return UIFont(descriptor: descriptor!, size: size) // size 0 means keep the size as it is
     }
 
     /// remove symbolic from original font
@@ -54,6 +81,7 @@ extension UIFont {
         var traitList = fontDescriptor.symbolicTraits
         traitList.remove(traits)
         let descriptor = fontDescriptor.withSymbolicTraits(traitList)
-        return UIFont(descriptor: descriptor!, size: 0) // size 0 means keep the size as it is
+        let size = fontDescriptor.pointSize
+        return UIFont(descriptor: descriptor!, size: size) // size 0 means keep the size as it is
     }
 }

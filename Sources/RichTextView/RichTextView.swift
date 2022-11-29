@@ -4,7 +4,7 @@
 //
 //  Created by Lee Yen Lin on 2022/11/4.
 //
-// swiftlint:disable opening_brace
+
 import UIKit
 
 public class RichTextView: UITextView {
@@ -266,8 +266,7 @@ public class RichTextView: UITextView {
                 let shiftRange = NSRange(location: range.location + shift, length: range.length)
                 if let result = setSingleParagraph(range: shiftRange,
                                                    indicator: indicator,
-                                                   enable: forceSetMode)
-                {
+                                                   enable: forceSetMode) {
                     shift += indicator.length * (result ? 1 : -1)
                 }
             }
@@ -276,8 +275,7 @@ public class RichTextView: UITextView {
 
     private func setSingleParagraph(range: NSRange,
                                     indicator: NSMutableAttributedString,
-                                    enable: Bool? = nil) -> Bool?
-    {
+                                    enable: Bool? = nil) -> Bool? {
         guard let originAttrStr = attributedText.mutableCopy() as? NSMutableAttributedString else {
             return nil
         }

@@ -1,44 +1,37 @@
-# By default, SwiftLint uses a set of sensible default rules you can adjust:
-disabled_rules: # rule identifiers turned on by default to exclude from running
-  - colon
-  - comma
+disabled_rules:
+  - trailing_comma
   - control_statement
-opt_in_rules: # some rules are turned off by default, so you need to opt-in
-  - empty_count # Find all the available rules by running: `swiftlint rules`
-
-# Alternatively, specify all rules explicitly by uncommenting this option:
-# only_rules: # delete `disabled_rules` & `opt_in_rules` if using this
-#   - empty_parameters
-#   - vertical_whitespace
-
-# configurable rules can be customized from this configuration file
-# binary rules can set their severity level
-force_cast: warning # implicitly
-force_try:
-  severity: warning # explicitly
-# rules that have both warning and error levels, can set just the warning level
-# implicitly
-line_length: 110
-# they can set both implicitly with an array
+opt_in_rules:
+  - empty_count
+  - missing_docs
+excluded:
+  - Carthage
+  - Pods
+  - Source/ExcludedFolder
+  - Source/ExcludedFile.swift
+  
+# rules
+force_cast: warning
+force_try: warning
+line_length: 160
+function_body_length:
+    warning: 160
 type_body_length:
-  - 300 # warning
-  - 400 # error
-# or they can set both explicitly
+  warning: 400
+  error: 600
 file_length:
   warning: 500
   error: 1200
-# naming rules can set warnings/errors for min_length and max_length
-# additionally they can set excluded names
 type_name:
-  min_length: 3
-  max_length: # warning and error
+  min_length: 3/0
+  max_length:
     warning: 40
-    error: 50
-  excluded: iPhone # excluded via string
-  allowed_symbols: ["_"] # these are allowed in type names
+  allowed_symbols: ["_"]
+large_tuple:
+    warning: 2
 identifier_name:
-  min_length: 3
-  excluded: # excluded via string array
-    - id
-    - URL
-    - GlobalAPIKey
+  min_length: 2
+  allowed_symbols:
+    - "_"
+  validates_start_with_lowercase: false
+reporter: "xcode"
