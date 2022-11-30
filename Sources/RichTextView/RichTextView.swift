@@ -36,7 +36,6 @@ public class RichTextView: UITextView {
         } else {
             setAttrWithKeepingPos { [weak self] in
                 self?.setAttribute(.font, value: font, range: targetRange)
-                self?.fixListPrefix()
             }
         }
     }

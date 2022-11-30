@@ -29,7 +29,6 @@ extension UIFont {
                 return nil
             }
             return getTextStyleByName(style.rawValue)
-
         } else {
             return getTextStyleBySize(fontDescriptor.pointSize)
         }
@@ -78,10 +77,8 @@ extension UIFont {
 
     /// remove symbolic from original font
     private func withoutTraits(traits: UIFontDescriptor.SymbolicTraits) -> UIFont {
-        var traitList = fontDescriptor.symbolicTraits
-        traitList.remove(traits)
-        let descriptor = fontDescriptor.withSymbolicTraits(traitList)
-        let size = fontDescriptor.pointSize
-        return UIFont(descriptor: descriptor!, size: size) // size 0 means keep the size as it is
+        let traitList = fontDescriptor.symbolicTraits
+        let descriptor = fontDescriptor.withSymbolicTraits(traitList.subtracting(traits))
+        return UIFont(descriptor: descriptor!, size: 0) // size 0 means keep the size as it is
     }
 }
