@@ -11,22 +11,37 @@ public class RichTextView: UITextView {
     /// config
     public let obliquenessVal = 0.3
     public let indentVal = CGFloat(32)
-    var isDelete = false
 
+    /// Init typing config
     public func initTypingStatus() {
-        typingAttributes[.font] = UIFont.preferredFont(forTextStyle: .body)
+        typingAttributes[.font] = CustomFont.regular.getFont(fontSize: .body)
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .left
         typingAttributes[.paragraphStyle] = paragraphStyle
+        self.adjustsFontForContentSizeCategory = true
+        
+        // TODO: mock
+        DispatchQueue.main.async { [self] in
+            let range = NSRange(location: 0, length: attributedText.length)
+            let origin = NSMutableAttributedString(attributedString: attributedText)
+            origin.removeAttribute(.font, range: range)
+                origin.addAttribute(.font, value: CustomFont.regular.getFont(fontSize: .body), range: range)
+            attributedText = origin
+        }
     }
 
     /* Fonts*/
     /// set font style
     public func setFont(fontStyle: UIFont.TextStyle) {
         // define target font, this will erase `bold` attribute
-        var font = UIFont.preferredFont(forTextStyle: fontStyle)
+        var font = CustomFont.regular.getFont(fontSize: .body)
+
         if fontStyle == .largeTitle {
-            font = font.setBold(true)
+            font = CustomFont.bold.getFont(fontSize: .largeTitle)
+        } else if fontStyle == .title1 {
+            font = CustomFont.regular.getFont(fontSize: .title)
+        } else if fontStyle == .title3 {
+            font = CustomFont.regular.getFont(fontSize: .subtitle)
         }
 
         // changing attribute
@@ -196,123 +211,6 @@ public class RichTextView: UITextView {
                                    range: targetRange)
             }
         }
-    }
-
-    // List
-    // bullet List
-    /** set bullet list */
-    /// 針對換行
-    public func fixListPrefix() {
-        let range = (text as NSString).paragraphRange(for: selectedRange)
-        if isDelete {
-            isDelete = false
-            return
-        }
-        if range.length == 0 {
-            let paragraphStyle = typingAttributes[.paragraphStyle] as? NSParagraphStyle
-            if paragraphStyle?.firstLineHeadIndent != paragraphStyle?.headIndent {
-                setBulletList(range)
-            }
-        }
-    }
-
-    public func setBulletList(_ range: NSRange? = nil, forceSetMode: Bool? = nil) {
-        let targetRange = range == nil ? paragraphRange : range!
-
-        // get current position and data
-        let indicator = NSMutableAttributedString(string: "•")
-        let originAttrStr = attributedText.mutableCopy() as? NSMutableAttributedString
-
-        if targetRange.length == 0 {
-            // get current paragraph style
-            let style = typingAttributes[.paragraphStyle] as? NSParagraphStyle
-            let firstIndent = style?.firstLineHeadIndent ?? 0
-
-            // set enable
-            // for calculate size
-            indicator.addAttributes(typingAttributes,
-                                    range: .init(location: 0, length: indicator.length))
-            let newParagraph = NSMutableParagraphStyle()
-            newParagraph.alignment = style?.alignment ?? .left
-            newParagraph.firstLineHeadIndent = firstIndent
-            newParagraph.headIndent = firstIndent + indicator.size().width
-            typingAttributes[.paragraphStyle] = newParagraph
-
-            // dot
-            indicator.addAttributes(typingAttributes,
-                                    range: .init(location: 0, length: indicator.length))
-
-            // insert to original text
-            originAttrStr?.insert(indicator, at: selectedRange.location)
-            attributedText = originAttrStr
-        } else {
-            // separate paragraph
-            let targetRange = selectedRange.length == 0 ? paragraphRange : selectedRange
-            let targetStr = originAttrStr?.attributedSubstring(from: targetRange).string ?? ""
-
-            // create paragraph range list
-            var rangeList = [NSRange]()
-            let strLenList = (targetStr.split(separator: "\n")).map(\.count)
-            var start = targetRange.location
-            for len in strLenList {
-                let range = (text as NSString).paragraphRange(for: .init(location: start, length: len))
-                rangeList.append(range)
-                start += len + 1
-            }
-
-            var shift = 0 // for delete/insert icon
-            for range in rangeList {
-                let shiftRange = NSRange(location: range.location + shift, length: range.length)
-                if let result = setSingleParagraph(range: shiftRange,
-                                                   indicator: indicator,
-                                                   enable: forceSetMode) {
-                    shift += indicator.length * (result ? 1 : -1)
-                }
-            }
-        }
-    }
-
-    private func setSingleParagraph(range: NSRange,
-                                    indicator: NSMutableAttributedString,
-                                    enable: Bool? = nil) -> Bool? {
-        guard let originAttrStr = attributedText.mutableCopy() as? NSMutableAttributedString else {
-            return nil
-        }
-        var attrList = typingAttributes
-        if range.length != 0 {
-            attrList = attributedText.attributes(at: range.location, effectiveRange: nil)
-        }
-        indicator.addAttributes(attrList, range: NSRange(location: 0, length: indicator.length))
-        let paragrapghStyle = (getAttribute(range, type: .paragraphStyle) as? [ParagraphRange])?.last
-        let newParagraphStyle = NSMutableParagraphStyle()
-        let firstIndent = paragrapghStyle?.paragraph.firstLineHeadIndent ?? 0
-        let headIndent = paragrapghStyle?.paragraph.headIndent ?? 0
-        newParagraphStyle.alignment = paragrapghStyle?.paragraph.alignment ?? .left
-
-        let enable = enable == nil ? firstIndent == headIndent : enable!
-
-        if enable { // add icon
-            originAttrStr.insert(indicator, at: range.location)
-            newParagraphStyle.firstLineHeadIndent = firstIndent
-            newParagraphStyle.headIndent = firstIndent + indicator.size().width
-            originAttrStr.addAttribute(.paragraphStyle,
-                                       value: newParagraphStyle,
-                                       range: .init(location: range.location,
-                                                    length: range.length + indicator.length))
-        } else {
-            newParagraphStyle.firstLineHeadIndent = firstIndent
-            newParagraphStyle.headIndent = firstIndent
-            originAttrStr.addAttribute(.paragraphStyle,
-                                       value: newParagraphStyle,
-                                       range: range)
-            originAttrStr.deleteCharacters(in: .init(location: range.location,
-                                                     length: indicator.length))
-
-            isDelete = true
-        }
-        attributedText = originAttrStr
-        typingAttributes[.paragraphStyle] = newParagraphStyle
-        return enable
     }
 }
 

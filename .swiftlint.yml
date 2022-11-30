@@ -23,7 +23,8 @@ file_length:
   warning: 500
   error: 1200
 type_name:
-  min_length: 3/0
+  min_length:
+    warning: 3
   max_length:
     warning: 40
   allowed_symbols: ["_"]
