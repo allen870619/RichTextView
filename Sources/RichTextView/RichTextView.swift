@@ -14,20 +14,11 @@ public class RichTextView: UITextView {
 
     /// Init typing config
     public func initTypingStatus() {
-        typingAttributes[.font] = CustomFont.regular.getFont(fontSize: .body)
+        adjustsFontForContentSizeCategory = true
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .left
         typingAttributes[.paragraphStyle] = paragraphStyle
-        self.adjustsFontForContentSizeCategory = true
-        
-        // TODO: mock
-        DispatchQueue.main.async { [self] in
-            let range = NSRange(location: 0, length: attributedText.length)
-            let origin = NSMutableAttributedString(attributedString: attributedText)
-            origin.removeAttribute(.font, range: range)
-                origin.addAttribute(.font, value: CustomFont.regular.getFont(fontSize: .body), range: range)
-            attributedText = origin
-        }
+        typingAttributes[.font] = CustomFont.regular.getFont(fontSize: .body)
     }
 
     /* Fonts*/

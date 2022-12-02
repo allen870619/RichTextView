@@ -9,13 +9,13 @@ import UIKit
 
 let fontName = "NotoSansTC"
 
-enum CustomFont: String {
+public enum CustomFont: String {
     case regular = "Regular"
     case bold = "Bold"
     case unknown
 
     /// Get UIFont by UIFont.TextStyle
-    func getFont(textStyle type: UIFont.TextStyle) -> UIFont {
+    public func getFont(textStyle type: UIFont.TextStyle) -> UIFont {
         switch type {
         case .largeTitle:
             return getFont(fontSize: CustomFontSize.largeTitle)
@@ -31,27 +31,27 @@ enum CustomFont: String {
     }
 
     /// Get UIFont by CustomFontSize
-    func getFont(fontSize type: CustomFontSize) -> UIFont {
+    public func getFont(fontSize type: CustomFontSize) -> UIFont {
         let fallback = UIFont.preferredFont(forTextStyle: .body)
         let originFont = UIFont(name: "\(fontName)-\(rawValue)", size: type.rawValue) ?? fallback
         return UIFontMetrics(forTextStyle: type.transToTextStyle()).scaledFont(for: originFont)
     }
 
     /// Get scaled font size
-    static func getScaledSize(style: UIFont.TextStyle) -> CGFloat {
+    public static func getScaledSize(style: UIFont.TextStyle) -> CGFloat {
         let font = UIFont(name: "\(fontName)-\(CustomFont.regular.rawValue)",
                           size: CustomFontSize.getSizeByStyle(style: style)) ?? .preferredFont(forTextStyle: .body)
         return UIFontMetrics(forTextStyle: style).scaledFont(for: font).pointSize
     }
 }
 
-enum CustomFontSize: CGFloat {
+public enum CustomFontSize: CGFloat {
     case largeTitle = 32
     case title = 28
     case subtitle = 24
     case body = 18
 
-    static func getSizeByStyle(style: UIFont.TextStyle) -> CGFloat {
+    public static func getSizeByStyle(style: UIFont.TextStyle) -> CGFloat {
         switch style {
         case .largeTitle:
             return largeTitle.rawValue
@@ -64,7 +64,7 @@ enum CustomFontSize: CGFloat {
         }
     }
 
-    func transToTextStyle() -> UIFont.TextStyle {
+    public func transToTextStyle() -> UIFont.TextStyle {
         switch self {
         case .largeTitle:
             return .largeTitle
